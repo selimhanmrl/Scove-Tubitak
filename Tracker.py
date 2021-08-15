@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from shapely.geometry import Point, Polygon
 from Draw_Polygons import PolygonDrawer
-
+import math
 
 # ***** replace with required image path *****
 cap = cv2.VideoCapture('a.mp4')
@@ -22,7 +22,10 @@ _, frame2 = cap.read()
 # Back Graund Substraction
 backSub = cv2.createBackgroundSubtractorKNN(detectShadows=False)
 
+roi = cv2.selectROI(frame1, showCrosshair=False, fromCenter=False)
 
+
+(x1,y1,w1,h1) = roi
 
 #roi = (239, 200, 117, 114)
 
@@ -39,7 +42,7 @@ print(pd.points)
 
 # for plus maze there is 4 polygon to separate experimant area
 polyRight = Polygon(pd.points[0])
-cv2.polylines(frame1, [np.array(pd.points[0])], False, (255, 0, 0), 1)
+
 polyleft = Polygon(pd.points[1])
 
 polyUp = Polygon(pd.points[2])
@@ -50,11 +53,13 @@ polyDown = Polygon(pd.points[3])
 framecounts = []
 framecount = 0
 flag = 0
-
 times = []
+total_path=0
+count = 0
 while cap.isOpened():
 
-
+    frame1 = frame1[y1:y1+h1, x1:x1+w1]
+    frame2 = frame2[y1:y1+h1, x1:x1+w1]
     # Here is tracking methods  with order : backgraund subsraction - threshold - dilate - find contours
     mask = backSub.apply(frame1)
     #diff = cv2.absdiff(frame1, frame2)
@@ -78,7 +83,9 @@ while cap.isOpened():
         cy = int(M['m01'] / M['m00'])
 
         center = (cx, cy)
-        pts.append(center)
+
+        if count > 60:
+            pts.append(center)
         frame1 = cv2.circle(frame1, center, 5, (0, 0, 255), -1)
         p = Point(cx, cy)
         if p.within(polyRight):
@@ -104,8 +111,10 @@ while cap.isOpened():
                 times.append(framecounts)
                 framecount = 0
                 flag = 0
-
-
+        count +=1
+    if len(pts)>1:
+        for i in range(len(pts)-1):
+            cv2.line(frame1,pts[i],pts[i+1],(0,0,255),1)
 
     cv2.imshow('Feed',frame1)
     #cv2.imshow('mask',mask)
@@ -117,7 +126,12 @@ while cap.isOpened():
     key = cv2.waitKey(1)
     if key == 27:
         break
+# Measure tracked path    
+for i in range(len(pts)-1):
+    dist = math.sqrt((pts[i+1][0] - pts[i][0])**2 + (pts[i+1][1] - pts[i][1])**2)
+    total_path+=dist
 
+print(total_path)
 print(times)
 cap.release()
 cv2.destroyAllWindows()
