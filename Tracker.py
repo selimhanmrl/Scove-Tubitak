@@ -6,16 +6,8 @@ import math
 
 # ***** replace with required image path *****
 cap = cv2.VideoCapture('a.mp4')
-_,frame = cap.read()
-clone = frame.copy()
-temp = frame.copy()
 
 # ***** global variable decleration *****
-done = False
-points = []
-current = (0, 0)
-prev_current = (0,0)
-
 _, frame1 = cap.read()
 _, frame2 = cap.read()
 
@@ -23,15 +15,13 @@ _, frame2 = cap.read()
 backSub = cv2.createBackgroundSubtractorKNN(detectShadows=False)
 
 roi = cv2.selectROI(frame1, showCrosshair=False, fromCenter=False)
-
-
 (x1,y1,w1,h1) = roi
 
 #roi = (239, 200, 117, 114)
 
 ## Polygon Drawer Class
-pd = PolygonDrawer("Polygon",frame)
-image = pd.run(frame)
+pd = PolygonDrawer("Polygon",frame1)
+image = pd.run(frame1)
 
 #fps for calculate time
 fps = cap.get(5)
@@ -89,11 +79,11 @@ while cap.isOpened():
         frame1 = cv2.circle(frame1, center, 5, (0, 0, 255), -1)
         p = Point(cx, cy)
         if p.within(polyRight):
-             cv2.putText(frame1, " Sag Tarafta " + str(framecount), (0, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+             cv2.putText(frame1, " Sag Tarafta " + str(framecount/fps), (0, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
              framecount += 1
              flag = 1
         elif p.within(polyleft):
-             cv2.putText(frame1, " Sol Tarafta "+ str(framecount), (0, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+             cv2.putText(frame1, " Sol Tarafta "+ str(framecount/fps), (0, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
              flag = 2
              framecount += 1
         elif p.within(polyUp):
